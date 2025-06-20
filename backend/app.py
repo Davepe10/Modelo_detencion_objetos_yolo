@@ -4,9 +4,7 @@ import cv2
 import os
 import threading
 from collections import Counter
-from utils.tts import speak, message_queue, process_queue
 import logging
-import queue
 import time
 
 app = Flask(__name__)
@@ -23,7 +21,6 @@ cap = None
 frame_rate = 15
 previous_counts = {}
 model = None
-tts_enabled = True
 
 # -------- Utilidades ----------
 def load_model(model_name):
@@ -38,10 +35,6 @@ def get_available_cameras(max_test=5):
             available.append((i, f"Cámara {i+1}"))
         cap.release()
     return available or [(0, "Cámara 1")]
-
-def notify(text):
-    if tts_enabled:
-        message_queue.put(text)
 
 def detect_objects():
     global selected_model, selected_camera, camera_on, previous_counts, cap, model
@@ -68,8 +61,7 @@ def detect_objects():
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
         if counts != previous_counts:
-            text = "Veo " + ", ".join([f"{v} {k}" for k, v in counts.items()])
-            notify(text)
+            logging.info("Conteo actualizado: " + ", ".join([f"{v} {k}" for k, v in counts.items()]))
             previous_counts = counts
 
         _, jpeg = cv2.imencode('.jpg', frame)
@@ -83,7 +75,7 @@ def detect_objects():
     if cap:
         cap.release()
 
-
+# -------- Rutas --------
 @app.route('/')
 def index():
     cameras = get_available_cameras()
@@ -108,7 +100,7 @@ def change_model():
     new_model = request.json['model']
     if new_model in models:
         selected_model = new_model
-        notify(f"Modelo cambiado a {selected_model}")
+        logging.info(f"Modelo cambiado a: {selected_model}")
         return jsonify({"message": f"Modelo cambiado a {selected_model}"})
     else:
         return jsonify({"message": "Modelo no encontrado"}), 404
@@ -120,7 +112,7 @@ def toggle_camera():
     if not camera_on and cap:
         cap.release()
         cap = None
-    notify("Cámara encendida" if camera_on else "Cámara apagada")
+    logging.info("Cámara encendida" if camera_on else "Cámara apagada")
     return jsonify({"status": "on" if camera_on else "off"})
 
 @app.route('/change_camera', methods=['POST'])
@@ -132,7 +124,7 @@ def change_camera():
         if cap:
             cap.release()
         camera_on = False
-        notify(f"Cambiando a cámara {selected_camera}")
+        logging.info(f"Cambiando a cámara {selected_camera}")
         return jsonify({"message": f"Cámara cambiada a {selected_camera}"})
     else:
         return jsonify({"message": "Cámara no encontrada"}), 404
@@ -149,8 +141,6 @@ def test_modelo2():
 def guia():
     return render_template('guia.html')
 
-
 if __name__ == "__main__":
-    threading.Thread(target=process_queue, daemon=True).start()
     model = load_model(DEFAULT_MODEL)
     app.run(debug=True)
