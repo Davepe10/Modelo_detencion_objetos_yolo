@@ -6,3 +6,5 @@ opencv-python-headless
 numpy
 Pillow
 gunicorn
+pyttsx3
+opencv-python
