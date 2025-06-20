@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Guía YOLOv8 - Detección en Tiempo Real</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding-bottom: 50px;
+    }
+    h1, h2, h3 {
+      color: #343a40;
+      margin-top: 30px;
+    }
+    pre, code {
+      background-color: #212529;
+      color: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 0.9rem;
+    }
+    nav a.nav-link.active {
+      font-weight: bold;
+      color: #fff !important;
+    }
+    .container {
+      padding-top: 2rem;
+    }
+    ul {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+  <a class="navbar-brand" href="/">YOLO Detector</a>
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarContent">
+    <div class="navbar-nav">
+      <a class="nav-link" href="{{ url_for('/') }}">Inicio</a>
+      <a class="nav-link" href="{{ url_for('test_modelo1') }}">Código Modelo 1</a>
+      <a class="nav-link" href="{{ url_for('test_modelo2') }}">Código Modelo 2</a>
+      <a class="nav-link active" href="{{ url_for('guia') }}">Guía</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <h1 class="text-center">Guía: Detección en Tiempo Real con YOLOv8 + Flask</h1>
+  <p class="lead text-center">Implementación de un sistema de detección de objetos con interfaz web, síntesis de voz y modelos entrenados personalizados.</p>
+
+  <hr/>
+
+  <h2>Descripción del Proyecto</h2>
+  <p>Este sistema permite hacer inferencia en vivo usando modelos YOLOv8. Se accede vía navegador, muestra resultados en video en tiempo real, cuenta objetos detectados y anuncia por voz lo que ve.</p>
+
+  <h2>Estructura del Proyecto</h2>
+  <pre>
+yolo_web_app/
+├── app.py
+├── static/
+│   └── style.css
+├── templates/
+│   ├── index.html
+│   ├── test_modelo1.html
+│   ├── test_modelo2.html
+│   └── guia.html
+├── models/
+│   ├── modelo1.pt
+│   └── modelo2.pt
+├── datasets/
+├── utils/
+│   └── tts.py
+  </pre>
+
+  <h2>Requisitos</h2>
+  <ul>
+    <li>Python 3.8+</li>
+    <li>Flask</li>
+    <li>OpenCV</li>
+    <li>Ultralytics</li>
+    <li>pyttsx3 (TTS)</li>
+  </ul>
+
+  <h2>Instalación de dependencias</h2>
+  <pre><code>pip install flask opencv-python ultralytics pyttsx3</code></pre>
+
+  <h2>Entrenamiento YOLOv8 personalizado</h2>
+  <h3>1. Descargar dataset</h3>
+  <pre>curl -O https://ultralytics.com/assets/coco128-seg.zip
+unzip coco128-seg.zip</pre>
+
+  <h3>2. Archivo de configuración <code>data.yaml</code></h3>
+  <pre>
+train: ./dataset/images/train
+val: ./dataset/images/val
+nc: 2
+names: ['persona', 'moto']
+  </pre>
+
+  <h3>3. Entrenamiento</h3>
+  <pre>yolo detect train data=data.yaml model=yolov8n.pt epochs=50 imgsz=640</pre>
+
+  <h3>4. Exportar modelo</h3>
+  <pre>yolo export model=runs/detect/train/weights/best.pt format=onnx</pre>
+
+  <h2>Texto a Voz (TTS)</h2>
+  <p>La voz usa <code>pyttsx3</code> y se activa automáticamente cuando cambian las detecciones. Ejemplo:</p>
+  <blockquote><em>"Veo 2 personas, 1 auto"</em></blockquote>
+
+  <h2>Visualización en tiempo real</h2>
+  <p>La cámara y detección se gestionan en el backend con Flask y OpenCV. El video se muestra en el frontend con etiquetas y conteos en vivo.</p>
+
+  <h2>Despliegue en producción</h2>
+  <ul>
+    <li><a href="https://render.com" target="_blank">Render</a></li>
+    <li><a href="https://heroku.com" target="_blank">Heroku</a></li>
+    <li><a href="https://ngrok.com" target="_blank">Ngrok (local exposure)</a></li>
+  </ul>
+
+  <h2>URL para acceder localmente</h2>
+  <pre>http://127.0.0.1:5000</pre>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
